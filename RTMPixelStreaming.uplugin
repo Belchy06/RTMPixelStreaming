@@ -1,0 +1,41 @@
+{
+	"FileVersion": 3,
+	"Version": 1.0,
+	"VersionName": "1.0",
+	"FriendlyName": "RTMP Pixel Streaming",
+	"Description": "Streaming of Unreal Engine audio and rendering to RTMP-compatible media players such as a web browsers.",
+	"Category": "Graphics",
+	"CreatedBy": "Epic Games, Inc.",
+	"CreatedByURL": "https://epicgames.com",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"EnabledByDefault": false,
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "RTMPixelStreaming",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault",
+			"PlatformAllowList": [ "Win64" ],
+			"TargetDenyList": [ ]
+		},
+	],
+	"Plugins": [
+		{
+			"Name": "PixelCapture",
+			"Enabled": true
+		},
+		{
+			"Name": "AVCodecsCore",
+			"Enabled": true
+		},
+		{
+			"Name": "NVCodecs",
+			"Enabled": true,
+            "PlatformAllowList": [ "Win64", "Linux" ]
+		},
+	]
+}
