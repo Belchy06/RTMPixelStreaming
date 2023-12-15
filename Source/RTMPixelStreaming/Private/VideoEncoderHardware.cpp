@@ -11,14 +11,15 @@ namespace UE::RTMPixelStreaming
 	{
 		FVideoEncoderConfigH264 EncoderConfig;
 
+		EncoderConfig.RepeatSPSPPS = true;
 		EncoderConfig.Preset = EAVPreset::UltraLowQuality;
 		EncoderConfig.LatencyMode = EAVLatencyMode::UltraLowLatency;
 		// We set width and height to zero here because we initialize encoder from the first frame dimensions, not this config.
 		EncoderConfig.Width = 0;
 		EncoderConfig.Height = 0;
 		EncoderConfig.TargetFramerate = 60;
-		EncoderConfig.TargetBitrate = 10000000;
-		EncoderConfig.MaxBitrate = 100000000;
+		EncoderConfig.TargetBitrate = 2500;
+		EncoderConfig.MaxBitrate = 5000;
 		EncoderConfig.MinQP = 0;
 		EncoderConfig.MaxQP = 51;
 		EncoderConfig.RateControlMode = ERateControlMode::CBR;
@@ -43,8 +44,8 @@ namespace UE::RTMPixelStreaming
 
 			VideoConfig->Width = Width;
 			VideoConfig->Height = Height;
-			VideoConfig->MaxBitrate = 100000000;
-			VideoConfig->TargetBitrate = 10000000;
+			VideoConfig->MaxBitrate = 5000;
+			VideoConfig->TargetBitrate = 2500;
 			VideoConfig->MinQP = 0;
 			VideoConfig->MaxQP = 51;
 			VideoConfig->RateControlMode = ERateControlMode::CBR;

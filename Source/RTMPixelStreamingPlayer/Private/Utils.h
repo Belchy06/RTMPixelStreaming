@@ -7,7 +7,7 @@
 #include "HAL/IConsoleManager.h"
 #include "Misc/CommandLine.h"
 
-namespace UE::RTMPixelStreaming
+namespace UE::RTMPixelStreamingPlayer
 {
 	template <typename T>
 	inline void CommandLineParseValue(const TCHAR* Match, TAutoConsoleVariable<T>& CVar)
@@ -77,21 +77,4 @@ namespace UE::RTMPixelStreaming
 			FPlatformProcess::ReturnSynchEventToPool(TaskEvent);
 		}
 	}
-
-	inline bool IsLittleEndian()
-	{
-		int n = 1;
-		return *(char*)&n == 1;
-	}
-
-	inline uint32 SwapHostToBigEndian(uint32 Value)
-	{
-		uint32 Temp = Value;
-		if (IsLittleEndian())
-		{
-			Temp = (((Temp) >> 24) | (((Temp) & 0x00FF0000) >> 8) | (((Temp) & 0x0000FF00) << 8) | ((Temp) << 24));
-		}
-
-		return Temp;
-	}
-} // namespace UE::RTMPixelStreaming
+} // namespace UE::RTMPixelStreamingPlayer
