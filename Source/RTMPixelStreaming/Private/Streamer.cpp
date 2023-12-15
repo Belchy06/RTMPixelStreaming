@@ -86,7 +86,7 @@ namespace UE::RTMPixelStreaming
 		uint32 total = EncodedVideo.DataSize;
 		uint8* buf_offset = buf;
 
-		static uint32 ts = 0;
+		uint32 ts = (uint32)(FPlatformTime::ToMilliseconds64(FPlatformTime::Cycles64()));
 
 		while (1)
 		{
