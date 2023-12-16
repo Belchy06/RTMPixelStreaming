@@ -12,8 +12,9 @@ namespace UnrealBuildTool.Rules
             PublicDependencyModuleNames.AddRange(new string[]
             {
                 "ApplicationCore",
+                "Engine",
                 "PixelCapture",
-                "TraceLog",
+                "TraceLog"
             });
 
             PrivateDependencyModuleNames.AddRange(new string[]
@@ -27,8 +28,7 @@ namespace UnrealBuildTool.Rules
                 "AVCodecsCore",
                 "AVCodecsCoreRHI",
                 "RenderCore",
-                "Renderer",
-                "Engine"
+                "Renderer"
             });
         }
     }

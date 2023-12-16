@@ -2,10 +2,12 @@
 
 #include "Module.h"
 
+#include "AudioEncoderFactory.h"
 #include "Logging.h"
 #include "Misc/CoreDelegates.h"
 #include "Settings.h"
 #include "Streamer.h"
+#include "RTMPixelStreamingAudioSourceSubmix.h"
 #include "RTMPixelStreamingVideoSourceBackBuffer.h"
 #include "RTMPixelStreamingVideoSourceBackBufferComposited.h"
 #include "VideoEncoderFactory.h"
@@ -50,6 +52,10 @@ namespace UE::RTMPixelStreaming
 			}
 
 			DefaultStreamer->SetVideoEncoder(FVideoEncoderFactory::CreateEncoder(Settings::GetSelectedVideoCodec()));
+
+			DefaultStreamer->SetAudioSource(FRTMPixelStreamingAudioSourceSubmix::Create());
+			DefaultStreamer->SetAudioEncoder(FAudioEncoderFactory::CreateEncoder(Settings::GetSelectedAudioCodec()));
+
 			DefaultStreamer->Connect(ServerURL);
 		});
 	}

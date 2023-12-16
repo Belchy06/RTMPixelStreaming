@@ -11,9 +11,16 @@ namespace UE::RTMPixelStreaming::Settings
 		TEXT("RTMPixelStreaming video codec. Supported values are `H264`, `VP8`, `VP9`"),
 		ECVF_Default);
 
+	TAutoConsoleVariable<FString> CVarRTMPixelStreamingAudioCodec(
+		TEXT("RTMPixelStreaming.Audio.Codec"),
+		TEXT("AAC"),
+		TEXT("RTMPixelStreaming audio codec. Supported values are `AAC`"),
+		ECVF_Default);
+
 	void InitialiseSettings()
 	{
-		CommandLineParseValue(TEXT("RTMPixelStreamingEncoderCodec="), CVarRTMPixelStreamingVideoCodec);
+		CommandLineParseValue(TEXT("RTMPixelStreamingVideoCodec="), CVarRTMPixelStreamingVideoCodec);
+		CommandLineParseValue(TEXT("RTMPixelStreamingAudioCodec="), CVarRTMPixelStreamingAudioCodec);
 	}
 
 	ERTMPixelStreamingVideoCodec GetSelectedVideoCodec()
@@ -34,6 +41,19 @@ namespace UE::RTMPixelStreaming::Settings
 		else
 		{
 			return ERTMPixelStreamingVideoCodec::H264;
+		}
+	}
+
+	ERTMPixelStreamingAudioCodec GetSelectedAudioCodec()
+	{
+		const FString CodecStr = CVarRTMPixelStreamingAudioCodec.GetValueOnAnyThread();
+		if (CodecStr == TEXT("AAC"))
+		{
+			return ERTMPixelStreamingAudioCodec::AAC;
+		}
+		else
+		{
+			return ERTMPixelStreamingAudioCodec::AAC;
 		}
 	}
 

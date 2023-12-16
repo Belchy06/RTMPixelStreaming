@@ -37,5 +37,10 @@
 			"Enabled": true,
             "PlatformAllowList": [ "Win64", "Linux" ]
 		},
+		{
+			"Name": "WmfMedia",
+			"Enabled": true,
+			"PlatformAllowList": [ "Win64" ]
+		}
 	]
 }

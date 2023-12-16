@@ -1,9 +1,11 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "VideoEncoderHardware.h"
-#include "PixelCaptureOutputFrameRHI.h"
 
 #include <chrono>
+
+#include "PixelCaptureOutputFrameRHI.h"
+#include "Video/Encoders/Configs/VideoEncoderConfigH264.h"
 
 namespace UE::RTMPixelStreaming
 {

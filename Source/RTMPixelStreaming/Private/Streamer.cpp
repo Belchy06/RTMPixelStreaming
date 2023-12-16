@@ -81,10 +81,12 @@ namespace UE::RTMPixelStreaming
 		}
 	}
 
-	UE_DISABLE_OPTIMIZATION
 	void FStreamer::OnEncodedVideo(FRTMPixelStreamingEncodedVideo EncodedVideo)
 	{
-		UE_LOG(LogRTMPixelStreaming, VeryVerbose, TEXT("Frame Encoded\nSize: %d"), EncodedVideo.DataSize);
+		if (!rtmp)
+		{
+			return;
+		}
 
 		uint8* Data = EncodedVideo.Data.Get();
 		uint32 Length = EncodedVideo.DataSize;
@@ -113,7 +115,7 @@ namespace UE::RTMPixelStreaming
 					OutputLen = BodyLen + FLV_TAG_HEAD_LEN + FLV_PRE_TAG_LEN;
 					Output = new uint8[OutputLen];
 					// flv tag header
-					uint32 Offset = BuildFLVTagHeader(&Output, 0, BodyLen);
+					uint32 Offset = BuildFLVTagHeader(&Output, 0, BodyLen, EPacketType::Video);
 
 					// flv VideoTagHeader
 					Offset = BuildFLVVideoTagHeader(&Output, Offset, false, true);
@@ -155,7 +157,7 @@ namespace UE::RTMPixelStreaming
 					OutputLen = BodyLen + FLV_TAG_HEAD_LEN + FLV_PRE_TAG_LEN;
 					Output = new uint8[OutputLen];
 					// flv tag header
-					uint32 Offset = BuildFLVTagHeader(&Output, 0, BodyLen);
+					uint32 Offset = BuildFLVTagHeader(&Output, 0, BodyLen, EPacketType::Video);
 
 					// flv VideoTagHeader
 					Offset = BuildFLVVideoTagHeader(&Output, Offset, true, false);
@@ -181,7 +183,7 @@ namespace UE::RTMPixelStreaming
 					OutputLen = BodyLen + FLV_TAG_HEAD_LEN + FLV_PRE_TAG_LEN;
 					Output = new uint8[OutputLen];
 					// flv tag header
-					uint32 Offset = BuildFLVTagHeader(&Output, 0, BodyLen);
+					uint32 Offset = BuildFLVTagHeader(&Output, 0, BodyLen, EPacketType::Video);
 
 					// flv VideoTagHeader
 					Offset = BuildFLVVideoTagHeader(&Output, Offset, false, false);
@@ -263,6 +265,111 @@ namespace UE::RTMPixelStreaming
 
 			return 0;
 		}();
+	}
+
+	void FStreamer::SetAudioSource(TSharedPtr<FRTMPixelStreamingAudioSource> InAudioSource)
+	{
+		AudioSource = InAudioSource;
+		AudioSource->OnAudioCaptured.AddSP(AsShared(), &FStreamer::OnAudioCaptured);
+	}
+
+	void FStreamer::SetAudioEncoder(TSharedPtr<IRTMPixelStreamingAudioEncoder> InAudioEncoder)
+	{
+		AudioEncoder = InAudioEncoder;
+		AudioEncoder->OnEncodedAudio.AddSP(AsShared(), &FStreamer::OnEncodedAudio);
+	}
+
+	void FStreamer::OnAudioCaptured(float* AudioData, int32 NumSamples, int32 NumChannels, const int32 SampleRate)
+	{
+		if (AudioEncoder)
+		{
+			AudioEncoder->Encode(AudioData, NumSamples, NumChannels, SampleRate);
+		}
+	}
+
+	UE_DISABLE_OPTIMIZATION
+	void FStreamer::OnEncodedAudio(FRTMPixelStreamingEncodedAudio EncodedAudio)
+	{
+		if (!rtmp)
+		{
+			return;
+		}
+
+		uint8*		Data = EncodedAudio.Data.Get();
+		uint32		Length = EncodedAudio.DataSize;
+		uint8*		DataOffset = Data;
+		static bool bIsFirstPacket = true;
+
+		while (true)
+		{
+			uint8* Output = nullptr;
+			uint32 OutputLen = 0;
+
+			uint32 ADTSLength = 0;
+			uint8* AudioFrame = GetADTS(&ADTSLength, &DataOffset, Data, Length);
+			if (AudioFrame == nullptr)
+			{
+				break;
+			}
+
+			if (bIsFirstPacket)
+			{
+				uint32 BodyLen = 2 + 2; // AudioTagHeader + AudioSpecificConfig
+				OutputLen = BodyLen + FLV_TAG_HEAD_LEN + FLV_PRE_TAG_LEN;
+				Output = new uint8[OutputLen];
+
+				// flv tag header
+				uint32 Offset = BuildFLVTagHeader(&Output, 0, BodyLen, EPacketType::Audio);
+
+				// flv AudioTagHeader
+				uint8 ChannelConfiguration = (AudioFrame[3] & 0xc0) >> 6;
+				uint8 SampleFrequencyIndex = (AudioFrame[2] & 0x3c) >> 2;
+				Offset = BuildFLVAudioTagHeader(&Output, Offset, ChannelConfiguration, SampleFrequencyIndex, true);
+
+				// flv AudioTagBody --AudioSpecificConfig
+				uint8 AudioObjectType = ((AudioFrame[2] & 0xc0) >> 6) + 1;
+				Output[Offset++] = (AudioObjectType << 3) | (SampleFrequencyIndex >> 1);
+				Output[Offset++] = ((SampleFrequencyIndex & 0x01) << 7) | (ChannelConfiguration << 3);
+
+				uint32_t fff = BodyLen + FLV_TAG_HEAD_LEN;
+				Output[Offset++] = (uint8_t)(fff >> 24); // data len
+				Output[Offset++] = (uint8_t)(fff >> 16); // data len
+				Output[Offset++] = (uint8_t)(fff >> 8);	 // data len
+				Output[Offset++] = (uint8_t)(fff);		 // data len
+
+				bIsFirstPacket = false;
+			}
+			else
+			{
+				uint32 BodyLen = 2 + ADTSLength - AAC_ADTS_HEADER_SIZE; // remove adts header + AudioTagHeader
+				OutputLen = BodyLen + FLV_TAG_HEAD_LEN + FLV_PRE_TAG_LEN;
+				Output = new uint8[OutputLen];
+				// flv tag header
+				uint32 Offset = BuildFLVTagHeader(&Output, 0, BodyLen, EPacketType::Audio);
+
+				// flv AudioTagHeader
+				uint8 ChannelConfiguration = (AudioFrame[3] & 0xc0) >> 6;
+				uint8 SampleFrequencyIndex = (AudioFrame[2] & 0x3c) >> 2;
+				Offset = BuildFLVAudioTagHeader(&Output, Offset, ChannelConfiguration, SampleFrequencyIndex, false);
+
+				// flv AudioTagBody --raw aac data
+				memcpy(Output + Offset, AudioFrame + AAC_ADTS_HEADER_SIZE, (ADTSLength - AAC_ADTS_HEADER_SIZE));
+
+				uint32_t fff = BodyLen + FLV_TAG_HEAD_LEN;
+				Offset += (ADTSLength - AAC_ADTS_HEADER_SIZE);
+				Output[Offset++] = (uint8_t)(fff >> 24); // data len
+				Output[Offset++] = (uint8_t)(fff >> 16); // data len
+				Output[Offset++] = (uint8_t)(fff >> 8);	 // data len
+				Output[Offset++] = (uint8_t)(fff);		 // data len
+			}
+
+			if (RTMP_Write(rtmp, reinterpret_cast<const char*>(Output), OutputLen) <= 0)
+			{
+				UE_LOG(LogRTMPixelStreaming, Warning, TEXT("Unable to write to server"));
+			}
+
+			delete Output;
+		}
 	}
 	UE_ENABLE_OPTIMIZATION
 } // namespace UE::RTMPixelStreaming

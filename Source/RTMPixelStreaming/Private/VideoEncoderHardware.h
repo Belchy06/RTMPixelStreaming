@@ -2,9 +2,8 @@
 
 #pragma once
 
+#include "Video/VideoEncoder.h"
 #include "IRTMPixelStreamingVideoEncoder.h"
-
-#include "Video/Encoders/Configs/VideoEncoderConfigH264.h"
 #include "Video/Resources/VideoResourceRHI.h"
 
 namespace UE::RTMPixelStreaming
