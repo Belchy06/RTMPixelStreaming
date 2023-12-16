@@ -7,59 +7,89 @@
 
 namespace UE::RTMPixelStreaming
 {
-	static uint32_t find_start_code(uint8_t* buf, uint32_t zeros_in_startcode)
+	static uint32 FindStartCode(uint8* Buffer, uint32 ZerosInStartCode)
 	{
-		uint32_t info;
-		uint32_t i;
+		uint32 Info;
+		uint32 i;
 
-		info = 1;
-		if ((info = (buf[zeros_in_startcode] != 1) ? 0 : 1) == 0)
+		Info = 1;
+		if ((Info = (Buffer[ZerosInStartCode] != 1) ? 0 : 1) == 0)
 			return 0;
 
-		for (i = 0; i < zeros_in_startcode; i++)
-			if (buf[i] != 0)
+		for (i = 0; i < ZerosInStartCode; i++)
+			if (Buffer[i] != 0)
 			{
-				info = 0;
+				Info = 0;
 				break;
 			};
 
-		return info;
+		return Info;
 	}
 
-	static uint8_t* get_nal(uint32_t* len, uint8_t** offset, uint8_t* start, uint32_t total)
+	static uint8* GetNal(uint32* Length, uint8** Offset, uint8* Start, uint32 Total)
 	{
-		uint32_t info;
-		uint8_t* q;
-		uint8_t* p = *offset;
-		*len = 0;
+		uint32 Info;
+		uint8* Q;
+		uint8* P = *Offset;
+		*Length = 0;
 
-		if ((p - start) >= total)
+		if ((P - Start) >= Total)
 			return NULL;
 
 		while (1)
 		{
-			info = find_start_code(p, 3);
-			if (info == 1)
+			Info = FindStartCode(P, 3);
+			if (Info == 1)
 				break;
-			p++;
-			if ((p - start) >= total)
+			P++;
+			if ((P - Start) >= Total)
 				return NULL;
 		}
-		q = p + 4;
-		p = q;
+		Q = P + 4;
+		P = Q;
 		while (1)
 		{
-			info = find_start_code(p, 3);
-			if (info == 1)
+			Info = FindStartCode(P, 3);
+			if (Info == 1)
 				break;
-			p++;
-			if ((p - start) >= total)
+			P++;
+			if ((P - Start) >= Total)
 				// return NULL;
 				break;
 		}
 
-		*len = (p - q);
-		*offset = p;
-		return q;
+		*Length = (P - Q);
+		*Offset = P;
+		return Q;
+	}
+
+	static uint32 BuildFLVTagHeader(uint8** Buffer, uint32 Offset, uint32 BodyLength)
+	{
+		uint32 Timestamp = (uint32)(FPlatformTime::ToMilliseconds64(FPlatformTime::Cycles64()));
+
+		(*Buffer)[Offset++] = 0x09;						 // tagtype video
+		(*Buffer)[Offset++] = (uint8)(BodyLength >> 16); // data len
+		(*Buffer)[Offset++] = (uint8)(BodyLength >> 8);	 // data len
+		(*Buffer)[Offset++] = (uint8)(BodyLength);		 // data len
+		(*Buffer)[Offset++] = (uint8)(Timestamp >> 16);	 // time stamp
+		(*Buffer)[Offset++] = (uint8)(Timestamp >> 8);	 // time stamp
+		(*Buffer)[Offset++] = (uint8)(Timestamp);		 // time stamp
+		(*Buffer)[Offset++] = (uint8)(Timestamp >> 24);	 // time stamp
+		(*Buffer)[Offset++] = 0x00;						 // stream id 0
+		(*Buffer)[Offset++] = 0x00;						 // stream id 0
+		(*Buffer)[Offset++] = 0x00;						 // stream id 0
+
+		return Offset;
+	}
+
+	static uint32 BuildFLVVideoTagHeader(uint8** Buffer, uint32 Offset, bool bIsKeyframe, bool bIsSPSPPS)
+	{
+		(*Buffer)[Offset++] = bIsKeyframe ? 0x17 : 0x27; // key frame, AVC
+		(*Buffer)[Offset++] = bIsSPSPPS ? 0x00 : 0x01;	 // avc sequence header
+		(*Buffer)[Offset++] = 0x00;						 // composite time
+		(*Buffer)[Offset++] = 0x00;						 // composite time
+		(*Buffer)[Offset++] = 0x00;						 // composite time
+
+		return Offset;
 	}
 } // namespace UE::RTMPixelStreaming
