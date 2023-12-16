@@ -7,7 +7,8 @@
 #include "Settings.h"
 #include "Streamer.h"
 #include "RTMPixelStreamingVideoSourceBackBuffer.h"
-#include "VideoEncoderHardware.h"
+#include "RTMPixelStreamingVideoSourceBackBufferComposited.h"
+#include "VideoEncoderFactory.h"
 
 namespace UE::RTMPixelStreaming
 {
@@ -39,8 +40,16 @@ namespace UE::RTMPixelStreaming
 				return;
 			}
 
-			DefaultStreamer->SetVideoSource(FRTMPixelStreamingVideoSourceBackBuffer::Create());
-			DefaultStreamer->SetVideoEncoder(MakeShared<FVideoEncoderHardware>());
+			if (GIsEditor)
+			{
+				DefaultStreamer->SetVideoSource(FRTMPixelStreamingVideoSourceBackBufferComposited::Create());
+			}
+			else
+			{
+				DefaultStreamer->SetVideoSource(FRTMPixelStreamingVideoSourceBackBuffer::Create());
+			}
+
+			DefaultStreamer->SetVideoEncoder(FVideoEncoderFactory::CreateEncoder(Settings::GetSelectedVideoCodec()));
 			DefaultStreamer->Connect(ServerURL);
 		});
 	}

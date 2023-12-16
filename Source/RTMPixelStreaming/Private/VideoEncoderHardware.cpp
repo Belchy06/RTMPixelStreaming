@@ -18,8 +18,8 @@ namespace UE::RTMPixelStreaming
 		EncoderConfig.Width = 0;
 		EncoderConfig.Height = 0;
 		EncoderConfig.TargetFramerate = 60;
-		EncoderConfig.TargetBitrate = 2500;
-		EncoderConfig.MaxBitrate = 5000;
+		EncoderConfig.TargetBitrate = 2500000;
+		EncoderConfig.MaxBitrate = 5000000;
 		EncoderConfig.MinQP = 0;
 		EncoderConfig.MaxQP = 51;
 		EncoderConfig.RateControlMode = ERateControlMode::CBR;
@@ -44,8 +44,8 @@ namespace UE::RTMPixelStreaming
 
 			VideoConfig->Width = Width;
 			VideoConfig->Height = Height;
-			VideoConfig->MaxBitrate = 5000;
-			VideoConfig->TargetBitrate = 2500;
+			VideoConfig->TargetBitrate = 2500000;
+			VideoConfig->MaxBitrate = 5000000;
 			VideoConfig->MinQP = 0;
 			VideoConfig->MaxQP = 51;
 			VideoConfig->RateControlMode = ERateControlMode::CBR;

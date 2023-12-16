@@ -19,11 +19,16 @@ namespace UnrealBuildTool.Rules
             PrivateDependencyModuleNames.AddRange(new string[]
             {
                 "librtmp",
+                "LibVpx",
                 "Core",
                 "Slate",
+                "SlateCore",
                 "RHI",
                 "AVCodecsCore",
                 "AVCodecsCoreRHI",
+                "RenderCore",
+                "Renderer",
+                "Engine"
             });
         }
     }
